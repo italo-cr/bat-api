@@ -1,0 +1,46 @@
+name: Deploy Backend with MongoDB
+
+on:
+  push:
+    branches:
+      - main # Dispara o workflow quando há um push para a branch main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: mongodb-backend # <-- IMPORTANTE: Isso vincula o job ao ambiente 'mongodb-backend'
+                                 #             e dá acesso aos secrets definidos lá, como MONGODB_URI.
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # Use a versão do Python que seu projeto usa (ex: '3.9', '3.12')
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run application tests or start deploy script
+        run: |
+          echo "Starting application with MongoDB connection..."
+          # Seu script Python irá ler a variável de ambiente MONGODB_URI
+          # O GitHub Actions injeta o secret no ambiente de execução do job.
+          python seu_arquivo_principal_do_backend.py
+        env:
+          # MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          # Não é estritamente necessário declarar 'env:' novamente aqui se o job já está
+          # vinculado ao 'environment: mongodb-backend'.
+          # A variável MONGODB_URI já estará disponível automaticamente para o ambiente de execução do job.
+          # No entanto, declarar explicitamente como acima pode ajudar na clareza do workflow,
+          # mas o valor já será injetado pelo ambiente.
+          #
+          # O código Python (ou Node.js, etc.) dentro de 'seu_arquivo_principal_do_backend.py'
+          # fará algo como:
+          # import os
+          # uri = os.getenv("MONGODB_URI")
+          # ... usar 'uri' para conectar ao MongoDB
